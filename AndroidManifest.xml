@@ -22,6 +22,11 @@
     <original-package android:name="com.android.htmlviewer" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <permission
+        android:name="cyanogenmod.permission.LEGALESE"
+        android:protectionLevel="signatureOrSystem"/>
 
     <application android:label="@string/app_label">
         <activity android:name="HTMLViewerActivity"
@@ -37,6 +42,17 @@
                 <data android:mimeType="application/xhtml+xml"/>
                 <data android:mimeType="application/vnd.wap.xhtml+xml"/>
             </intent-filter>
-         </activity>
+        </activity>
+        <activity android:name="com.android.htmlviewer.ExternalLegalViewerActivity"
+                  android:permission="cyanogenmod.permission.LEGALESE"
+                  android:theme="@style/Theme.Legal"
+                  android:exported="true">
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="cyanogenmod.intent.action.LEGALESE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>
