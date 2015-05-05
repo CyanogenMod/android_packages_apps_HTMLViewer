@@ -16,13 +16,17 @@
 
 package com.android.htmlviewer;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -45,11 +49,38 @@ public class HTMLViewerActivity extends Activity {
     private WebView mWebView;
     private View mLoading;
 
+    private boolean mAllowNetwork = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        String permission = "cyanogenmod.permission.SETUP";
+        PackageManager pm = getPackageManager();
+        ComponentName callingComponentName = getCallingActivity();
+        String callingPackage = callingComponentName != null ?
+                callingComponentName.getPackageName() :
+                null;
+        int hasPerm = pm.checkPermission(
+                permission,
+                callingPackage);
+        if (hasPerm == PackageManager.PERMISSION_GRANTED) {
+            mAllowNetwork = true;
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
+            setTheme(android.R.style.Theme_Material_Light);
+        }
         setContentView(R.layout.main);
+
+        if (getIntent().getBooleanExtra("extra_prefs_show_button_bar", false)) {
+            View dismiss = findViewById(R.id.dismiss);
+            dismiss.setVisibility(View.VISIBLE);
+            dismiss.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finish();
+                }
+            });
+        }
 
         mWebView = (WebView) findViewById(R.id.webview);
         mLoading = findViewById(R.id.loading);
@@ -64,11 +95,14 @@ public class HTMLViewerActivity extends Activity {
         s.setDisplayZoomControls(false);
         s.setSavePassword(false);
         s.setSaveFormData(false);
-        s.setBlockNetworkLoads(true);
+        if (!mAllowNetwork) {
+            s.setBlockNetworkLoads(true);
 
-        // Javascript is purposely disabled, so that nothing can be
-        // automatically run.
-        s.setJavaScriptEnabled(false);
+            // Javascript is purposely disabled, so that nothing can be
+            // automatically run.
+            s.setJavaScriptEnabled(false);
+        }
+
         s.setDefaultTextEncodingName("utf-8");
 
         final Intent intent = getIntent();
