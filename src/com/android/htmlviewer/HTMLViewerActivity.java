@@ -16,9 +16,11 @@
 
 package com.android.htmlviewer;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,6 +43,8 @@ import java.util.zip.GZIPInputStream;
  */
 public class HTMLViewerActivity extends Activity {
     private static final String TAG = "HTMLViewer";
+
+    private static final int REQUEST_CODE_DANGEROUS_PERMISSION_CHECK = 100;
 
     private WebView mWebView;
     private View mLoading;
@@ -71,18 +75,44 @@ public class HTMLViewerActivity extends Activity {
         s.setJavaScriptEnabled(false);
         s.setDefaultTextEncodingName("utf-8");
 
-        final Intent intent = getIntent();
-        if (intent.hasExtra(Intent.EXTRA_TITLE)) {
-            setTitle(intent.getStringExtra(Intent.EXTRA_TITLE));
+        if (hasStoragePermissions()) {
+            load();
+        } else {
+            requestAppPermissions();
         }
-
-        mWebView.loadUrl(String.valueOf(intent.getData()));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mWebView.destroy();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            int[] grantResults) {
+        if (requestCode == REQUEST_CODE_DANGEROUS_PERMISSION_CHECK) {
+            load();
+        }
+    }
+
+    private void requestAppPermissions() {
+        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                REQUEST_CODE_DANGEROUS_PERMISSION_CHECK);
+    }
+
+    private boolean hasStoragePermissions() {
+        return checkCallingOrSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void load() {
+        final Intent intent = getIntent();
+        if (intent.hasExtra(Intent.EXTRA_TITLE)) {
+            setTitle(intent.getStringExtra(Intent.EXTRA_TITLE));
+        }
+
+        mWebView.loadUrl(String.valueOf(intent.getData()));
     }
 
     private class ChromeClient extends WebChromeClient {
