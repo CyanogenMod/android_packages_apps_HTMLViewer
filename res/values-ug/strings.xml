@@ -16,4 +16,5 @@
 -->
 <resources>
   <!-- Title of the HTML Viewer activity. -->
+  <string name="app_label">HTML كۆرگۈچ</string>
 </resources>
